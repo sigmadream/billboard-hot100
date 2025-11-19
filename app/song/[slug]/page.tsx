@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
-import { getSongDetail, parseSongSlug } from '@/lib/csvParser'
+import { getSongDetail, parseSongSlug, getLatestChartData, createSongSlug } from '@/lib/csvParser'
 import { transformToSongDetail } from '@/lib/dataTransformer'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -9,6 +9,18 @@ interface PageProps {
     params: Promise<{
         slug: string
     }>
+}
+
+/**
+ * 정적 생성에 필요한 모든 slug를 생성하는 함수
+ * output: export 모드에서 필수
+ */
+export async function generateStaticParams() {
+    const latestData = getLatestChartData()
+    
+    return latestData.map((row) => ({
+        slug: createSongSlug(row.title, row.performer),
+    }))
 }
 
 export default async function SongDetailPage({ params }: PageProps) {
