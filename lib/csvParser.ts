@@ -101,3 +101,83 @@ export function getLatestChartData(): CSVRow[] {
 
   return latestData;
 }
+
+/**
+ * 특정 노래의 상세 정보를 가져오는 함수
+ * @param title 노래 제목
+ * @param artist 아티스트 이름
+ * @param date 차트 날짜 (선택사항, 없으면 최신 날짜 사용)
+ * @returns 노래 상세 정보 또는 null
+ */
+export function getSongDetail(
+  title: string,
+  artist: string,
+  date?: string
+): CSVRow | null {
+  const allData = parseCSV('data/hot100_archive_1958_2021.csv')
+
+  // 날짜가 지정되지 않으면 최신 날짜 사용
+  let targetDate = date
+  if (!targetDate) {
+    const dates = [...new Set(allData.map(row => row.chart_date))].sort().reverse()
+    targetDate = dates[0]
+  }
+
+  // 제목과 아티스트로 노래 찾기 (대소문자 무시)
+  const song = allData.find(
+    row =>
+      row.chart_date === targetDate &&
+      row.title.toLowerCase().trim() === title.toLowerCase().trim() &&
+      row.performer.toLowerCase().trim() === artist.toLowerCase().trim()
+  )
+
+  return song || null
+}
+
+/**
+* 노래 제목과 아티스트로 URL 친화적인 slug 생성
+* @param title 노래 제목
+* @param artist 아티스트 이름
+* @returns URL slug
+*/
+export function createSongSlug(title: string, artist: string): string {
+  const titleSlug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  const artistSlug = artist
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return `${titleSlug}-${artistSlug}`
+}
+
+/**
+* slug에서 노래 제목과 아티스트 추출
+* @param slug URL slug
+* @returns { title: string, artist: string } 또는 null
+*/
+export function parseSongSlug(slug: string): { title: string; artist: string } | null {
+  // slug 형식: "title-artist"
+  // 마지막 하이픈을 기준으로 분리 (아티스트 이름에도 하이픈이 있을 수 있음)
+  // 간단한 방법: 모든 노래 데이터를 순회하며 slug와 일치하는 것 찾기
+  const allData = parseCSV('data/hot100_archive_1958_2021.csv')
+
+  // 최신 날짜의 데이터만 사용
+  const dates = [...new Set(allData.map(row => row.chart_date))].sort().reverse()
+  const latestDate = dates[0]
+  const latestData = allData.filter(row => row.chart_date === latestDate)
+
+  // slug와 일치하는 노래 찾기
+  for (const row of latestData) {
+    const rowSlug = createSongSlug(row.title, row.performer)
+    if (rowSlug === slug) {
+      return {
+        title: row.title,
+        artist: row.performer
+      }
+    }
+  }
+
+  return null
+}

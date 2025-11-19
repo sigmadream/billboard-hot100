@@ -15,3 +15,15 @@ export interface ChartData {
     peak: number
     weeks: number
 }
+
+export interface SongDetail {
+    rank: number
+    title: string
+    artist: string
+    chartDate: string
+    currentPosition: number
+    previousPosition: number | null
+    peakPosition: number
+    weeksOnChart: number
+    imageUrl: string
+}
